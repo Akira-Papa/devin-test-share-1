@@ -1,4 +1,6 @@
-from prompt_generator.utils.validators import validate_requirement, validate_prompt
+from prompt_generator.utils.validators import (
+    validate_requirement, validate_prompt
+)
 
 
 def test_validate_requirement_valid() -> None:

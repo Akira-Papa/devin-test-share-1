@@ -20,10 +20,11 @@ def test_requirement_parser_valid_input() -> None:
 
 
 def test_requirement_parser_minimal_input() -> None:
-    raw_data = {"title": "最小要件", "description": "必須フィールドのみの要件", "context": "最小コンテキスト"}
-
-    requirement = RequirementParser.parse(raw_data)
-    assert isinstance(requirement, Requirement)
-    assert requirement.title == "最小要件"
-    assert requirement.constraints == []
-    assert requirement.goals == []
+    # 最小限の入力でパースできることを確認
+    result = RequirementParser().parse(
+        {"title": "Test Title", "description": "Test Description"}
+    )
+    assert isinstance(result, Requirement)
+    assert result.title == "Test Title"
+    assert result.constraints == []
+    assert result.goals == []
