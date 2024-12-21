@@ -1,34 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Github, Server } from "lucide-react"
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-gray-100 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl">Full Stack Application</CardTitle>
+            <CardDescription>Built with modern technologies</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <Server className="text-blue-500" size={24} />
+              <div>
+                <h3 className="font-medium">Backend Status</h3>
+                <p className="text-sm text-gray-500">FastAPI + PostgreSQL</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Github className="text-gray-700" size={24} />
+              <div>
+                <h3 className="font-medium">Frontend Stack</h3>
+                <p className="text-sm text-gray-500">React + Vite + Tailwind</p>
+              </div>
+            </div>
+            <Button className="mt-4" variant="default">
+              Check Status
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
