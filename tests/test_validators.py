@@ -1,7 +1,4 @@
-import pytest
 from prompt_generator.utils.validators import validate_requirement, validate_prompt
-from prompt_generator.models.requirement import Requirement
-from prompt_generator.models.prompt import Prompt
 
 
 def test_validate_requirement_valid() -> None:

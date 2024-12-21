@@ -1,4 +1,3 @@
-import pytest
 from prompt_generator.models.requirement import Requirement
 from prompt_generator.core.requirement_parser import RequirementParser
 
