@@ -3,6 +3,7 @@ from prompt_generator.models.requirement import Requirement
 from prompt_generator.models.prompt import Prompt
 from prompt_generator.core.prompt_generator import PromptGenerator
 
+
 @pytest.fixture
 def sample_requirement() -> Requirement:
     return Requirement(
@@ -10,8 +11,9 @@ def sample_requirement() -> Requirement:
         description="これはテスト用の要件です",
         constraints=["制約1", "制約2"],
         goals=["目標1", "目標2"],
-        context="テストコンテキスト"
+        context="テストコンテキスト",
     )
+
 
 def test_prompt_generator_basic(sample_requirement: Requirement) -> None:
     generator = PromptGenerator()
@@ -23,11 +25,10 @@ def test_prompt_generator_basic(sample_requirement: Requirement) -> None:
     assert len(prompt.constraints) == 2
     assert len(prompt.capabilities) >= 2
 
+
 def test_prompt_generator_minimal() -> None:
     requirement = Requirement(
-        title="最小要件",
-        description="必須フィールドのみの要件",
-        context="最小コンテキスト"
+        title="最小要件", description="必須フィールドのみの要件", context="最小コンテキスト"
     )
 
     generator = PromptGenerator()

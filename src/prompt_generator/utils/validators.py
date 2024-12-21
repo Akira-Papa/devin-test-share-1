@@ -2,6 +2,7 @@ from typing import Dict, Any
 from ..models.requirement import Requirement
 from ..models.prompt import Prompt
 
+
 def validate_requirement(data: Dict[str, Any]) -> bool:
     """
     要件定義データのバリデーションを行う
@@ -17,6 +18,7 @@ def validate_requirement(data: Dict[str, Any]) -> bool:
         return True
     except Exception:
         return False
+
 
 def validate_prompt(data: Dict[str, Any]) -> bool:
     """

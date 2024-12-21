@@ -11,18 +11,20 @@ def test_validate_requirement_valid() -> None:
         "description": "これはテスト用の要件です",
         "constraints": ["制約1", "制約2"],
         "goals": ["目標1", "目標2"],
-        "context": "テストコンテキスト"
+        "context": "テストコンテキスト",
     }
     assert validate_requirement(valid_data) is True
+
 
 def test_validate_requirement_invalid() -> None:
     """無効な要件データのバリデーションをテストする"""
     invalid_data = {
         "title": "テスト要件",
         # descriptionが欠落
-        "constraints": ["制約1", "制約2"]
+        "constraints": ["制約1", "制約2"],
     }
     assert validate_requirement(invalid_data) is False
+
 
 def test_validate_prompt_valid() -> None:
     """有効なプロンプトデータのバリデーションをテストする"""
@@ -31,15 +33,16 @@ def test_validate_prompt_valid() -> None:
         "context": "テストコンテキスト",
         "constraints": ["制約1", "制約2"],
         "capabilities": ["機能1", "機能2"],
-        "metadata": {"key": "value"}
+        "metadata": {"key": "value"},
     }
     assert validate_prompt(valid_data) is True
+
 
 def test_validate_prompt_invalid() -> None:
     """無効なプロンプトデータのバリデーションをテストする"""
     invalid_data = {
         "system_prompt": "テストプロンプト",
         # contextが欠落
-        "constraints": ["制約1", "制約2"]
+        "constraints": ["制約1", "制約2"],
     }
     assert validate_prompt(invalid_data) is False

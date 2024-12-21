@@ -1,6 +1,7 @@
 from prompt_generator.models.requirement import Requirement
 from prompt_generator.core.prompt_generator import PromptGenerator
 
+
 def main() -> None:
     # サンプル要件定義
     requirement = Requirement(
@@ -8,7 +9,7 @@ def main() -> None:
         description="顧客サポート用のチャットボットを開発する",
         constraints=["応答時間は2秒以内", "個人情報の取り扱いに注意"],
         goals=["顧客満足度の向上", "サポートコストの削減"],
-        context="Eコマースサイトのサポート"
+        context="Eコマースサイトのサポート",
     )
 
     # プロンプト生成
@@ -22,6 +23,7 @@ def main() -> None:
     print(f"Constraints: {prompt.constraints}")
     print(f"Capabilities: {prompt.capabilities}")
     print(f"Metadata: {prompt.metadata}")
+
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from ..models.requirement import Requirement
 
+
 class RequirementParser:
     """要件定義をパースし、構造化されたデータに変換するクラス"""
 

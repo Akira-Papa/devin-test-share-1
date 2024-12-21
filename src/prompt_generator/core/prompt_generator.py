@@ -2,6 +2,7 @@ from typing import Dict, Any, List
 from ..models.requirement import Requirement
 from ..models.prompt import Prompt
 
+
 class PromptGenerator:
     """要件定義からシステムプロンプトを生成するクラス"""
 
@@ -33,7 +34,7 @@ class PromptGenerator:
             context=requirement.description,
             constraints=constraints,
             capabilities=capabilities,
-            metadata=metadata
+            metadata=metadata,
         )
 
     def _create_system_prompt(self, requirement: Requirement) -> str:
@@ -45,7 +46,9 @@ class PromptGenerator:
 
         if requirement.constraints:
             prompt_parts.append("制約条件:")
-            prompt_parts.extend([f"- {constraint}" for constraint in requirement.constraints])
+            prompt_parts.extend(
+                [f"- {constraint}" for constraint in requirement.constraints]
+            )
 
         if requirement.goals:
             prompt_parts.append("達成目標:")
