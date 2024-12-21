@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from ..models.requirement import Requirement
 from ..models.prompt import Prompt
 
@@ -15,16 +15,26 @@ class PromptGenerator:
         Returns:
             Prompt: 生成されたシステムプロンプト
         """
-        # 基本的なプロンプト構造の生成
-        prompt_data = {
-            "system_prompt": self._create_system_prompt(requirement),
-            "context": requirement.description,
-            "constraints": requirement.constraints,
-            "capabilities": self._derive_capabilities(requirement),
-            "metadata": {"source_requirement": requirement.title}
-        }
+        # システムプロンプトのテキストを生成
+        system_prompt = self._create_system_prompt(requirement)
 
-        return Prompt(**prompt_data)
+        # 制約条件のリストを取得
+        constraints = requirement.constraints.copy()
+
+        # 機能リストを導出
+        capabilities = self._derive_capabilities(requirement)
+
+        # メタデータを準備
+        metadata: Dict[str, Any] = {"source_requirement": requirement.title}
+
+        # プロンプトオブジェクトを生成して返す
+        return Prompt(
+            system_prompt=system_prompt,
+            context=requirement.description,
+            constraints=constraints,
+            capabilities=capabilities,
+            metadata=metadata
+        )
 
     def _create_system_prompt(self, requirement: Requirement) -> str:
         """システムプロンプトのテキストを生成する"""
@@ -43,7 +53,7 @@ class PromptGenerator:
 
         return "\n".join(prompt_parts)
 
-    def _derive_capabilities(self, requirement: Requirement) -> list[str]:
+    def _derive_capabilities(self, requirement: Requirement) -> List[str]:
         """要件から必要な機能を導出する"""
         # 基本的な機能セット
         capabilities = [
