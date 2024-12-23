@@ -194,44 +194,121 @@ class Deployment:
             raise ValueError("リポジトリ名は'owner/repo'形式である必要があります")
         if pull_number < 1:
             raise ValueError("PR番号は1以上である必要があります")
-            
-        print(f"[GitHub mock] リポジトリ {repo} のPR #{pull_number} を取得...")
-        time.sleep(1)  # API呼び出しのシミュレーション
-        
-        # モックのPR情報を返す
-        return {
-            "title": "機能追加: 新しい検索機能の実装",
-            "number": pull_number,
-            "state": "open",
-            "author": "devin-ai",
-            "created_at": "2024-01-24T12:00:00Z",
-            "updated_at": "2024-01-24T13:00:00Z",
-            "commits": [
-                {
-                    "sha": "abc123",
-                    "message": "検索機能の基本実装",
-                    "author": "devin-ai"
-                },
-                {
-                    "sha": "def456",
-                    "message": "テストケースの追加",
-                    "author": "devin-ai"
-                }
-            ],
-            "files": {
-                "changed": 2,
-                "additions": 150,
-                "deletions": 10,
-                "files": [
-                    "search.py",
-                    "tests/test_search.py"
-                ]
-            },
-            "comments": [
-                {
-                    "author": "reviewer",
-                    "body": "LGTMです！",
-                    "created_at": "2024-01-24T12:30:00Z"
-                }
+
+        try:
+            import subprocess
+            import json
+            from datetime import datetime
+
+            # GitHub CLIを使用してPR情報を取得
+            fields = [
+                "title",
+                "number",
+                "state",
+                "author",
+                "createdAt",
+                "updatedAt",
+                "commits",
+                "files",
+                "comments",
+                "body",
+                "baseRefName",
+                "headRefName",
+                "mergeable",
+                "reviewDecision"
             ]
-        }
+
+            result = subprocess.run(
+                ["gh", "pr", "view", str(pull_number),
+                 "--repo", repo,
+                 "--json", ",".join(fields)],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+
+            # JSON形式の結果をパース
+            pr_data = json.loads(result.stdout)
+
+            # コミット情報の取得
+            commits_result = subprocess.run(
+                ["gh", "pr", "view", str(pull_number),
+                 "--repo", repo,
+                 "--json", "commits"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            commits_data = json.loads(commits_result.stdout)["commits"]
+
+            # 変更ファイル情報の取得
+            files_result = subprocess.run(
+                ["gh", "pr", "view", str(pull_number),
+                 "--repo", repo,
+                 "--json", "files"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            files_data = json.loads(files_result.stdout)["files"]
+
+            # レビューコメントの取得
+            reviews_result = subprocess.run(
+                ["gh", "pr", "view", str(pull_number),
+                 "--repo", repo,
+                 "--json", "reviews"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            reviews_data = json.loads(reviews_result.stdout)["reviews"]
+
+            # 情報を整形して返す
+            return {
+                "title": pr_data["title"],
+                "number": pr_data["number"],
+                "state": pr_data["state"],
+                "author": pr_data["author"]["login"],
+                "created_at": pr_data["createdAt"],
+                "updated_at": pr_data["updatedAt"],
+                "base_branch": pr_data["baseRefName"],
+                "head_branch": pr_data["headRefName"],
+                "mergeable": pr_data["mergeable"],
+                "review_decision": pr_data["reviewDecision"],
+                "body": pr_data["body"],
+                "commits": [{
+                    "sha": commit["oid"],
+                    "message": commit["messageHeadline"],
+                    "author": commit["authors"][0]["login"] if commit["authors"] else "unknown",
+                    "created_at": commit["committedDate"]
+                } for commit in commits_data],
+                "files": {
+                    "changed": len(files_data),
+                    "additions": sum(f["additions"] for f in files_data),
+                    "deletions": sum(f["deletions"] for f in files_data),
+                    "files": [{
+                        "path": f["path"],
+                        "additions": f["additions"],
+                        "deletions": f["deletions"],
+                        "status": f["status"]
+                    } for f in files_data]
+                },
+                "reviews": [{
+                    "author": review["author"]["login"],
+                    "state": review["state"],
+                    "submitted_at": review["submittedAt"],
+                    "body": review["body"]
+                } for review in reviews_data],
+                "comments": [{
+                    "author": comment["author"]["login"],
+                    "body": comment["body"],
+                    "created_at": comment["createdAt"]
+                } for comment in pr_data["comments"]]
+            }
+
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"GitHub CLIコマンドの実行に失敗しました: {e.stderr}")
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"GitHub APIのレスポンスの解析に失敗しました: {str(e)}")
+        except Exception as e:
+            raise RuntimeError(f"PRの取得に失敗しました: {str(e)}")

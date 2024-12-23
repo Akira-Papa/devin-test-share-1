@@ -246,18 +246,59 @@ class SearchAnalysis:
         if index is not None and index < 1:
             raise ValueError("インデックスは1以上である必要があります")
             
-        print(f"[Search mock] シンボル '{symbol}' の情報を取得（ファイル: {path}, 行: {line}, インデックス: {index}）")
-        
-        # モックの情報を返す
-        return f"""
-型: function
-定義: def {symbol}(arg1: str, arg2: int = 0) -> bool
-ドキュメント: サンプル関数の説明
-パラメータ:
-- arg1: 第1引数の説明
-- arg2: 第2引数の説明（デフォルト値: 0）
-戻り値: 処理結果を真偽値で返す
+        try:
+            import jedi
+            
+            # Jediを使用してシンボルの情報を取得
+            script = jedi.Script(path=path)
+            definitions = script.infer(line, column=None)
+            
+            if not definitions:
+                raise RuntimeError(f"シンボル '{symbol}' の情報が見つかりません")
+            
+            # インデックスが指定されている場合は該当する定義を返す
+            if index is not None:
+                if index > len(definitions):
+                    raise ValueError(f"インデックス {index} が範囲外です（定義数: {len(definitions)}）")
+                definition = definitions[index - 1]
+            else:
+                definition = definitions[0]
+            
+            # シンボル情報の取得
+            symbol_type = definition.type
+            symbol_def = str(definition.get_line_code()).strip()
+            docstring = definition.docstring() or "ドキュメントがありません"
+            
+            # パラメータ情報の取得
+            params = []
+            if hasattr(definition, 'params'):
+                for param in definition.params:
+                    param_name = param.name
+                    param_type = param.annotation.get_type_hint() if param.annotation else "不明"
+                    param_default = param.default.get_safe_value() if param.default else "なし"
+                    params.append(f"- {param_name}: 型={param_type}, デフォルト値={param_default}")
+            
+            # 戻り値の型情報の取得
+            return_type = "不明"
+            if hasattr(definition, 'return_annotation') and definition.return_annotation:
+                return_type = definition.return_annotation.get_type_hint()
+            
+            # 情報を整形して返す
+            result = f"""
+型: {symbol_type}
+定義: {symbol_def}
+ドキュメント: {docstring}
 """
+            
+            if params:
+                result += "\nパラメータ:\n" + "\n".join(params)
+            
+            result += f"\n戻り値の型: {return_type}"
+            
+            return result.strip()
+            
+        except Exception as e:
+            raise RuntimeError(f"シンボル情報の取得に失敗しました: {str(e)}")
 
     @staticmethod
     def gather_information(query: str, current_file: Optional[str] = None) -> str:
@@ -338,33 +379,95 @@ class SearchAnalysis:
             raise ValueError("画像ファイルを指定する必要があります")
         if not os.path.exists(file):
             raise FileNotFoundError(f"指定された画像ファイルが存在しません: {file}")
+
+        try:
+            import base64
+            from openai import OpenAI
+            from PIL import Image
+            import io
+
+            # OpenAI APIクライアントの初期化
+            api_key = os.getenv("OpenAI_API_OPENAI_API_KEY")
+            if not api_key:
+                raise RuntimeError("OpenAI APIキーが設定されていません")
+
+            client = OpenAI(api_key=api_key)
+
+            # 画像ファイルの読み込みと基本情報の取得
+            with Image.open(file) as img:
+                width, height = img.size
+                format_name = img.format
+                mode = img.mode
+
+                # 画像をbase64エンコード
+                img_byte_arr = io.BytesIO()
+                img.save(img_byte_arr, format=img.format)
+                img_byte_arr = img_byte_arr.getvalue()
+                base64_image = base64.b64encode(img_byte_arr).decode('utf-8')
+
+            # プロンプトの生成
+            if questions: 
+                prompt = f"""
+以下の画像について、次の質問に詳しく答えてください：
+
+{questions}
+
+また、以下の情報も含めて分析してください：
+- 画像の種類と主な要素
+- 重要なテキストや視覚的特徴
+- 色使い、コントラスト、明瞭度
+- 画像の目的や用途
+"""
+            else:
+                prompt = """
+この画像について、以下の点を詳しく分析してください：
+
+1. 画像の基本的な内容と主要な要素
+2. 重要なテキストや記号
+3. レイアウトや構成
+4. 色使い、コントラスト、画質
+5. 画像の目的や用途
+6. 特筆すべき特徴や詳細
+
+できるだけ具体的に、日本語で説明してください。
+"""
+
+            # OpenAI Vision APIを使用して画像解析
+            response = client.chat.completions.create(
+                model="gpt-4-vision-preview",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/{format_name.lower()};base64,{base64_image}",
+                                    "detail": "high"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=1000
+            )
+
+            # 解析結果の整形
+            analysis = response.choices[0].message.content
             
-        print(f"[Search mock] 画像ファイル '{file}' を解析")
-        if questions:
-            print(f"[Search mock] 質問: {questions}")
-            
-            
-        # モックの解析結果を返す
-        return f"""
+            return f"""
 画像解析結果:
 
 1. 基本情報:
    - ファイル名: {os.path.basename(file)}
-   - サイズ: 1920x1080px
-   - 形式: PNG
+   - サイズ: {width}x{height}px
+   - 形式: {format_name}
+   - カラーモード: {mode}
 
-2. 画像の内容:
-   - 種類: スクリーンショット
-   - 主な要素: ウェブページのUI
-   - テキスト: "サンプルテキスト"
-
-3. 特徴:
-   - 色使い: モノクロ
-   - コントラスト: 高
-   - 明瞭度: 良好
-
-4. 質問への回答:
-   {questions if questions else "質問なし"}に対する分析結果...
-
-注意: これはモックの解析結果です。実際の画像解析では、より詳細な情報が提供されます。
+2. 解析内容:
+{analysis}
 """
+
+        except Exception as e:
+            raise RuntimeError(f"画像の解析に失敗しました: {str(e)}")
